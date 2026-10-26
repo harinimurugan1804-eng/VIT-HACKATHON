@@ -1,12 +1,15 @@
 /**
  * components/CameraStream.tsx
  * Resilient MJPEG camera stream component.
- * Automatically fetches a fresh signed stream URL from GET /cameras/{id}/stream-url on load error.
+ * In mock mode (VITE_USE_MOCKS=true): shows "Stream unavailable in mock mode" without the Refresh button.
+ * In real mode: loads stream and automatically fetches a fresh signed stream URL on error with Refresh button.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { VideoOff, RefreshCw } from 'lucide-react'
 import { fetchCameraStreamUrl, resolveMediaUrl } from '@/lib/api'
+
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
 
 interface CameraStreamProps {
   cameraId: string
@@ -70,6 +73,25 @@ export function CameraStream({
     onLoad?.()
   }
 
+  // Requirement 1: In mock mode, the tiles show a clean "Stream unavailable in mock mode" message without the Refresh button.
+  if (USE_MOCKS) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center p-4 text-center ${className}`}
+        style={{
+          background: 'var(--surface-subtle)',
+          minHeight: '200px',
+        }}
+      >
+        <VideoOff className="w-8 h-8 text-[var(--text-muted)] mb-2 opacity-50" />
+        <span className="text-xs font-medium text-[var(--text-secondary)]">
+          Stream unavailable in mock mode
+        </span>
+      </div>
+    )
+  }
+
+  // Real backend error state: keep current Refresh behaviour
   if (hasError) {
     return (
       <div

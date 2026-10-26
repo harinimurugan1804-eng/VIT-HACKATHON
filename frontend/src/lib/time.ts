@@ -1,23 +1,28 @@
 /**
  * lib/time.ts
- * All time-formatting helpers for SafetyAI.
+ * All time-formatting helpers for RingGuard.
  * API times are UTC ISO-8601 strings.
- * Display times are always shown in IST (Asia/Kolkata, UTC+5:30).
+ * Display times are always shown in IST (Asia/Kolkata, UTC+5:30) with AM/PM strictly in capitals.
  */
 
 const IST = 'Asia/Kolkata'
 
+function uppercaseAmPm(timeStr: string): string {
+  return timeStr.replace(/\b(am|pm)\b/gi, m => m.toUpperCase())
+}
+
 /**
- * Format a UTC ISO string as "10:42:13 AM" in IST.
+ * Format a UTC ISO string as "10:42:13 AM" in IST with capitalized AM/PM.
  */
 export function formatTime(utcIso: string): string {
-  return new Date(utcIso).toLocaleTimeString('en-IN', {
+  const str = new Date(utcIso).toLocaleTimeString('en-IN', {
     timeZone: IST,
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true,
   })
+  return uppercaseAmPm(str)
 }
 
 /**
@@ -62,23 +67,24 @@ export function fromNow(utcIso: string): string {
 
 /**
  * The primary display format used across the app.
- * "10:42:13 AM · 2 min ago"
+ * "10:42:13 AM · 2 min ago" (with capitalized AM/PM)
  */
 export function formatIncidentTime(utcIso: string): string {
   return `${formatTime(utcIso)} · ${fromNow(utcIso)}`
 }
 
 /**
- * Current time in IST as a formatted string "10:42:13 AM".
+ * Current time in IST as a formatted string "10:42:13 AM" with AM/PM in capitals.
  */
 export function nowIST(): string {
-  return new Date().toLocaleTimeString('en-IN', {
+  const str = new Date().toLocaleTimeString('en-IN', {
     timeZone: IST,
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true,
   })
+  return uppercaseAmPm(str)
 }
 
 /**

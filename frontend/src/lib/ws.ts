@@ -15,29 +15,39 @@ const API_URL   = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').repl
 
 /* ── Mock incident templates ───────────────────────────── */
 
-const MOCK_CAMERAS = ['cam-east-wing', 'cam-south-gate', 'cam-warehouse-a', 'cam-roof-level']
-const MOCK_CAMERA_NAMES = [
-  'East Wing, Loading Bay 2',
-  'South Gate, Entry Point',
-  'Warehouse A, Racking Zone',
-  'Roof Level, HVAC Area',
-]
+// Only online cameras: cam-roof-level is offline and must never receive fake new incidents
+const ONLINE_MOCK_CAMERAS = [
+  { id: 'cam-east-wing', name: 'East Wing, Loading Bay 2' },
+  { id: 'cam-south-gate', name: 'South Gate, Entry Point' },
+  { id: 'cam-warehouse-a', name: 'Warehouse A, Racking Zone' },
+] as const
+
 const MOCK_TYPES = ['access', 'ppe', 'fall', 'fire', 'unattended', 'loitering', 'crowding'] as const
-const MOCK_SEVERITIES = ['critical', 'high', 'low'] as const
+
+const SEVERITY_BY_TYPE: Record<(typeof MOCK_TYPES)[number], 'critical' | 'high' | 'low'> = {
+  fire: 'critical',
+  fall: 'critical',
+  access: 'high',
+  unattended: 'high',
+  crowding: 'high',
+  ppe: 'low',
+  loitering: 'low',
+}
+
 let _mockIdCounter = 900
 
 function makeMockIncident(): Incident {
-  const camIdx = Math.floor(Math.random() * MOCK_CAMERAS.length)
-  const type   = MOCK_TYPES[Math.floor(Math.random() * MOCK_TYPES.length)]
-  const sev    = MOCK_SEVERITIES[Math.floor(Math.random() * MOCK_SEVERITIES.length)]
-  const id     = ++_mockIdCounter
+  const cam = ONLINE_MOCK_CAMERAS[Math.floor(Math.random() * ONLINE_MOCK_CAMERAS.length)]
+  const type = MOCK_TYPES[Math.floor(Math.random() * MOCK_TYPES.length)]
+  const severity = SEVERITY_BY_TYPE[type]
+  const id = ++_mockIdCounter
   return {
     id,
     type,
-    severity: sev,
+    severity,
     status: 'open',
-    camera_id: MOCK_CAMERAS[camIdx],
-    camera_name: MOCK_CAMERA_NAMES[camIdx],
+    camera_id: cam.id,
+    camera_name: cam.name,
     zone: 'zone-' + type,
     started_at: new Date().toISOString(),
     confidence: Math.round((0.72 + Math.random() * 0.27) * 100) / 100,

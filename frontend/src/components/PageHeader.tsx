@@ -1,6 +1,7 @@
 /**
  * components/PageHeader.tsx
- * Standard top-of-page header: title, optional description, optional actions.
+ * Pro top-of-page header.
+ * Page titles are 28px, weight 600, letter-spacing -0.02em. No emoji or decorative icons.
  */
 
 interface Props {
@@ -11,13 +12,13 @@ interface Props {
 
 export function PageHeader({ title, description, actions }: Props) {
   return (
-    <div className="flex items-start justify-between gap-4 mb-6">
-      <div>
-        <h1 className="text-xl font-semibold text-[var(--text-primary)] leading-tight">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="min-w-0">
+        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-white leading-tight">
           {title}
         </h1>
         {description && (
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">{description}</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)] font-normal">{description}</p>
         )}
       </div>
       {actions && (

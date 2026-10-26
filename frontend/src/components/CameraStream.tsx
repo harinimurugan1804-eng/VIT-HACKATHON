@@ -3,6 +3,7 @@
  * Resilient MJPEG camera stream component.
  * In mock mode (VITE_USE_MOCKS=true): shows "Stream unavailable in mock mode" without the Refresh button.
  * In real mode: loads stream and automatically fetches a fresh signed stream URL on error with Refresh button.
+ * Solid near-black, 1px border at rgba(255,255,255,0.08).
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -73,37 +74,36 @@ export function CameraStream({
     onLoad?.()
   }
 
-  // Requirement 1: In mock mode, the tiles show a clean "Stream unavailable in mock mode" message without the Refresh button.
+  // In mock mode, tiles show clean "Stream unavailable in mock mode" without refresh button
   if (USE_MOCKS) {
     return (
       <div
         className={`flex flex-col items-center justify-center p-4 text-center ${className}`}
         style={{
-          background: 'var(--surface-subtle)',
+          background: '#0b0b0c',
           minHeight: '200px',
         }}
       >
-        <VideoOff className="w-8 h-8 text-[var(--text-muted)] mb-2 opacity-50" />
-        <span className="text-xs font-medium text-[var(--text-secondary)]">
+        <VideoOff className="w-7 h-7 text-[var(--text-muted)] mb-2 opacity-40" />
+        <span className="text-xs font-mono text-[var(--text-secondary)]">
           Stream unavailable in mock mode
         </span>
       </div>
     )
   }
 
-  // Real backend error state: keep current Refresh behaviour
+  // Real backend error state: keep Refresh behaviour with pro bento styling
   if (hasError) {
     return (
       <div
-        className={`flex flex-col items-center justify-center p-4 rounded-lg border text-center ${className}`}
+        className={`flex flex-col items-center justify-center p-4 text-center ${className}`}
         style={{
-          background: 'var(--surface-subtle)',
-          borderColor: 'var(--border)',
+          background: '#0b0b0c',
           minHeight: '200px',
         }}
       >
-        <VideoOff className="w-8 h-8 text-[var(--neutral)] mb-2" />
-        <span className="text-xs font-medium text-[var(--text-secondary)] mb-3">
+        <VideoOff className="w-7 h-7 text-[var(--text-muted)] mb-2" />
+        <span className="text-xs font-mono text-[var(--text-secondary)] mb-3">
           Stream unavailable or expired
         </span>
         <button
@@ -113,7 +113,7 @@ export function CameraStream({
             refreshStream()
           }}
           disabled={isRefreshing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-[var(--accent)] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#0b0b0c] bg-white hover:bg-white/90 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           <span>{isRefreshing ? 'Reconnecting...' : 'Refresh Stream'}</span>

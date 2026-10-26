@@ -1,8 +1,9 @@
 /**
  * app/Layout.tsx
- * App shell: fixed left sidebar + top bar + scrollable content area.
- * Displays real-time system health, current IST time, logged-in user and logout action.
- * Shows emergency alert_all banner across the top of the app until dismissed.
+ * Pro dark bento app shell:
+ * - Solid #000000 page with solid #0b0b0c surfaces and 1px borders at rgba(255,255,255,0.08).
+ * - Monospace Geist Mono time and metrics.
+ * - Meaningful status indicators only.
  */
 
 import { useState, useEffect } from 'react'
@@ -17,8 +18,6 @@ import {
   BarChart3,
   Shield,
   Video,
-  Wifi,
-  WifiOff,
   ChevronLeft,
   ChevronRight,
   Database,
@@ -36,7 +35,7 @@ import { wsClient } from '@/lib/ws'
 import type { AlertAllNotice } from '@/lib/types'
 
 const NAV = [
-  { to: '/live',       icon: Video,        label: 'Live Feed'    },
+  { to: '/live',       icon: Video,         label: 'Live Feed'   },
   { to: '/incidents',  icon: AlertTriangle, label: 'Incidents'   },
   { to: '/assistant',  icon: MessageSquare, label: 'Assistant'   },
   { to: '/overview',   icon: BarChart3,     label: 'Overview'    },
@@ -79,12 +78,12 @@ export function Layout() {
   const llmOnline     = health?.llm === 'ok' || health?.llm === 'ollama_only' || health?.llm === true
 
   return (
-    <div className="flex flex-col h-dvh overflow-hidden" style={{ background: 'var(--bg)' }}>
-      {/* ── Emergency alert_all red banner across top of app ──── */}
+    <div className="flex flex-col h-dvh overflow-hidden bg-black text-white">
+      {/* ── Emergency alert_all banner across top of app ──── */}
       {alertNotice && (
         <div
           role="alert"
-          className="w-full bg-rose-600 text-white px-4 py-2.5 flex items-center justify-between text-xs sm:text-sm font-semibold shadow-xl shrink-0 z-50 border-b border-rose-700 animate-pulse"
+          className="w-full bg-[#f43f5e] text-white px-4 py-2.5 flex items-center justify-between text-xs sm:text-sm font-semibold shadow-lg shrink-0 z-50 border-b border-[#f43f5e]"
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
             <AlertTriangle className="w-4 h-4 shrink-0 text-white" />
@@ -92,7 +91,7 @@ export function Layout() {
               EMERGENCY BROADCAST ALERT: {alertNotice.message}
             </span>
             {alertNotice.by && (
-              <span className="text-xs opacity-90 hidden md:inline font-normal">
+              <span className="text-xs opacity-90 hidden md:inline font-mono font-normal">
                 (Initiated by {alertNotice.by})
               </span>
             )}
@@ -100,7 +99,7 @@ export function Layout() {
           <button
             type="button"
             onClick={() => setAlertNotice(null)}
-            className="ml-4 flex items-center gap-1 px-2.5 py-1 rounded bg-black/25 hover:bg-black/40 text-white text-xs font-medium transition-colors shrink-0 cursor-pointer"
+            className="ml-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/30 hover:bg-black/50 text-white text-xs font-medium transition-colors shrink-0 cursor-pointer"
             aria-label="Dismiss alert"
           >
             <X className="w-3.5 h-3.5" />
@@ -115,48 +114,44 @@ export function Layout() {
           className="flex flex-col shrink-0 h-full border-r transition-all duration-200"
           style={{
             width: collapsed ? '60px' : '220px',
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
+            background: '#0b0b0c',
+            borderColor: 'rgba(255, 255, 255, 0.08)',
           }}
         >
           {/* Logo */}
           <div
             className="flex items-center gap-3 px-4 py-4 border-b"
-            style={{ borderColor: 'var(--border)', minHeight: '60px' }}
+            style={{ borderColor: 'rgba(255, 255, 255, 0.08)', minHeight: '60px' }}
           >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'var(--accent)' }}
-            >
+            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 bg-white/10 border border-white/10">
               <Shield className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             {!collapsed && (
-              <span className="font-semibold text-sm tracking-wide text-[var(--text-primary)] truncate">
+              <span className="font-semibold text-sm tracking-tight text-white truncate">
                 {APP_NAME}
               </span>
             )}
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 py-3 overflow-hidden" aria-label="Main navigation">
+          <nav className="flex-1 py-3 px-2 overflow-hidden space-y-1" aria-label="Main navigation">
             {NAV.map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}
                 to={to}
                 title={collapsed ? label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 rounded-[var(--radius-sm)] text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] ${
+                  `flex items-center gap-3 px-3 py-2 rounded-[12px] text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${
                     isActive
-                      ? 'text-[var(--text-primary)] bg-[var(--accent-subtle)]'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
+                      ? 'text-white bg-white/10'
+                      : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <Icon
-                      className="w-4 h-4 shrink-0"
-                      style={{ color: isActive ? 'var(--accent)' : undefined }}
+                      className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[var(--text-muted)]'}`}
                       aria-hidden="true"
                     />
                     {!collapsed && <span className="truncate">{label}</span>}
@@ -169,11 +164,11 @@ export function Layout() {
           {/* Collapse toggle */}
           <div
             className="p-3 border-t"
-            style={{ borderColor: 'var(--border)' }}
+            style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}
           >
             <button
               onClick={() => setCollapsed(c => !c)}
-              className="flex items-center justify-center w-full py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+              className="flex items-center justify-center w-full py-1.5 rounded-[10px] text-xs text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {collapsed ? (
@@ -189,18 +184,18 @@ export function Layout() {
         </aside>
 
         {/* ── Main column ─────────────────────────────────────── */}
-        <div className="flex flex-col flex-1 min-w-0">
+        <div className="flex flex-col flex-1 min-w-0 bg-black">
           {/* Top bar */}
           <header
             className="flex items-center gap-4 px-5 border-b shrink-0"
             style={{
               height: '60px',
-              background: 'var(--surface)',
-              borderColor: 'var(--border)',
+              background: '#0b0b0c',
+              borderColor: 'rgba(255, 255, 255, 0.08)',
             }}
           >
             {/* Status pills */}
-            <div className="flex items-center gap-3 flex-1 overflow-hidden">
+            <div className="flex items-center gap-2.5 flex-1 overflow-hidden">
               {/* Cameras */}
               <StatusPill
                 icon={<LayoutGrid className="w-3 h-3" />}
@@ -247,19 +242,16 @@ export function Layout() {
             <div className="flex items-center gap-4 shrink-0">
               {/* Clock with AM/PM in capitals */}
               <time
-                className="text-sm tabular text-[var(--text-secondary)] shrink-0 font-mono hidden md:inline"
+                className="text-xs tabular text-[var(--text-secondary)] shrink-0 font-mono hidden md:inline"
                 aria-label={`Current time: ${time} IST`}
               >
-                {time} <span className="text-[var(--text-muted)] text-xs">IST</span>
+                {time} <span className="text-[var(--text-muted)] text-[10px]">IST</span>
               </time>
 
               {/* Logged in User Profile & Role */}
-              <div className="flex items-center gap-2.5 pl-3 border-l border-[var(--border)] shrink-0">
+              <div className="flex items-center gap-2.5 pl-3 border-l border-white/10 shrink-0">
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0 ring-1 ring-white/10"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--accent) 0%, #2563eb 100%)',
-                  }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold text-white uppercase shrink-0 bg-white/10 border border-white/15"
                   title={user?.name || 'User'}
                 >
                   {user?.name ? (
@@ -269,16 +261,10 @@ export function Layout() {
                   )}
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-xs font-semibold text-[var(--text-primary)] leading-tight max-w-[120px] truncate">
+                  <span className="text-xs font-medium text-white leading-tight max-w-[120px] truncate">
                     {user?.name || 'Admin'}
                   </span>
-                  <span
-                    className="text-[10px] font-medium px-1.5 py-0.5 rounded tracking-wide leading-none inline-block self-start mt-0.5"
-                    style={{
-                      background: 'rgba(59, 130, 246, 0.15)',
-                      color: '#93c5fd',
-                    }}
-                  >
+                  <span className="text-[10px] font-mono text-[var(--text-muted)] leading-none mt-0.5">
                     {user?.role || 'Admin'}
                   </span>
                 </div>
@@ -287,18 +273,18 @@ export function Layout() {
                 <button
                   type="button"
                   onClick={logout}
-                  className="ml-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--critical)] hover:bg-[var(--critical-subtle)] border border-[var(--border)] transition-colors cursor-pointer"
-                  title="Log out of RingGuard"
+                  className="ml-1.5 flex items-center gap-1.5 px-2.5 py-1 rounded-[10px] text-xs font-mono text-[var(--text-secondary)] hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
+                  title="Log out"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Log out</span>
+                  <span className="hidden sm:inline">Logout</span>
                 </button>
               </div>
             </div>
           </header>
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-5 min-h-0" id="main-content">
+          <main className="flex-1 overflow-y-auto p-5 min-h-0 bg-black" id="main-content">
             <Outlet />
           </main>
         </div>
@@ -319,21 +305,22 @@ interface StatusPillProps {
 function StatusPill({ icon, label, online, title }: StatusPillProps) {
   return (
     <div
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono border"
       style={{
-        background: online ? 'var(--resolved-subtle)' : 'var(--neutral-subtle)',
-        color: online ? 'var(--resolved)' : 'var(--neutral)',
-        borderColor: online ? 'var(--resolved)' + '30' : 'var(--neutral)' + '30',
+        background: '#0b0b0c',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        color: 'var(--text-secondary)',
       }}
       title={title}
     >
-      {online ? (
-        <Wifi className="w-3 h-3 shrink-0" aria-hidden="true" />
-      ) : (
-        <WifiOff className="w-3 h-3 shrink-0" aria-hidden="true" />
-      )}
-      {icon}
-      <span>{label}</span>
+      <span
+        className="w-1.5 h-1.5 rounded-full shrink-0"
+        style={{
+          background: online ? '#10b981' : '#6b7280',
+        }}
+      />
+      <span className="text-[var(--text-muted)]">{icon}</span>
+      <span className="text-white text-[11px]">{label}</span>
     </div>
   )
 }

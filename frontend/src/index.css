@@ -1,33 +1,30 @@
 @import "tailwindcss";
 
 /* ============================================================
-   DESIGN TOKENS — SafetyAI Control Room
-   All colour usage must go through these variables.
+   DESIGN TOKENS — Pro Dark Bento Design System
+   Solid near-black on #000, 1px border at rgba(255,255,255,0.08).
+   Card radius 20px. Monospace for numbers, times, percentages.
    ============================================================ */
 
 @layer base {
   :root {
     /* ── Background layers ── */
-    --bg: #0a0c10;
-    --surface: #111318;
-    --surface-raised: #181c24;
-    --surface-hover: #1e2330;
+    --bg: #000000;
+    --surface: #0b0b0c;
+    --surface-raised: #111113;
+    --surface-hover: #161619;
 
-    /* ── Borders ── */
-    --border: #252a36;
-    --border-subtle: #1a1f2b;
+    /* ── Borders & Hairlines ── */
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --hair: rgba(255, 255, 255, 0.08);
 
     /* ── Text ── */
-    --text-primary: #e8eaf0;
-    --text-secondary: #8891a8;
-    --text-muted: #4f5668;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.56);
+    --text-muted: rgba(255, 255, 255, 0.38);
 
-    /* ── Brand accent (electric indigo) ── */
-    --accent: #6366f1;
-    --accent-hover: #4f52d8;
-    --accent-subtle: rgba(99, 102, 241, 0.12);
-
-    /* ── Severity — used ONLY for meaning ── */
+    /* ── Functional Severity Colours (Only these get colour) ── */
     --critical: #f43f5e;
     --critical-subtle: rgba(244, 63, 94, 0.12);
     --high: #f59e0b;
@@ -43,10 +40,17 @@
     --online: #10b981;
     --offline: #f43f5e;
 
-    /* ── Radius & spacing ── */
-    --radius: 12px;
-    --radius-sm: 6px;
-    --radius-lg: 16px;
+    /* ── Brand accent (Clean white / subtle surface) ── */
+    --accent: #ffffff;
+    --accent-hover: #e5e5e5;
+    --accent-subtle: rgba(255, 255, 255, 0.08);
+
+    /* ── Radius & Spacing ── */
+    --radius: 20px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-pill: 14px;
   }
 }
 
@@ -63,11 +67,13 @@
 
   html {
     font-family:
+      "Geist",
       "Inter",
+      ui-sans-serif,
       system-ui,
       -apple-system,
       sans-serif;
-    background-color: var(--bg);
+    background-color: #000000;
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -76,37 +82,47 @@
   body {
     margin: 0;
     min-height: 100dvh;
-    background-color: var(--bg);
+    background-color: #000000;
   }
 
-  /* Tabular numbers for data */
+  /* Monospace font utility for numbers, dates, codes */
+  .font-mono,
+  .mono,
   .tabular {
+    font-family:
+      "Geist Mono",
+      "JetBrains Mono",
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
     font-variant-numeric: tabular-nums;
   }
 
-  /* Scrollbar */
+  /* Scrollbars */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: var(--bg);
+    background: #000000;
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+    background: rgba(255, 255, 255, 0.22);
   }
 
-  /* Focus rings */
+  /* Clean focus rings */
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid rgba(255, 255, 255, 0.4);
     outline-offset: 2px;
   }
 
-  /* Reset */
   button,
   input,
   select,
@@ -126,6 +142,7 @@
   --color-surface-hover: var(--surface-hover);
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
+  --color-hair: var(--hair);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
@@ -139,63 +156,146 @@
   --color-online: var(--online);
   --color-offline: var(--offline);
 
-  --font-family-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
 
-  --border-radius-DEFAULT: var(--radius);
-  --border-radius-sm: var(--radius-sm);
-  --border-radius-lg: var(--radius-lg);
+  --border-radius-DEFAULT: 20px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
 }
 
 /* ============================================================
-   COMPONENT UTILITIES
+   BENTO GRID & COMPONENT UTILITIES
    ============================================================ */
 
 @layer components {
-  /* Card — the single card style per brief */
+  /* 12-column Bento Grid with 14px gaps */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  /* Card: solid near-black (#0b0b0c) on #000, 1px border at rgba(255,255,255,0.08), radius 20px */
   .card {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    background-color: #0b0b0c;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    position: relative;
   }
 
   .card-raised {
-    background-color: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    background-color: #111113;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    position: relative;
   }
 
-  /* Pulse animation for critical alerts */
-  @keyframes pulse-red {
+  /* Segmented pill group: white background on selected item */
+  .seg {
+    display: inline-flex;
+    padding: 3px;
+    gap: 2px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .seg button,
+  .seg-btn {
+    border: 0;
+    height: 28px;
+    min-width: 44px;
+    padding: 0 12px;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .seg button[aria-pressed="true"],
+  .seg button.active,
+  .seg-btn[aria-pressed="true"],
+  .seg-btn.active {
+    background: #ffffff;
+    color: #0b0b0c;
+    font-weight: 600;
+  }
+
+  .seg button:hover:not([aria-pressed="true"]):not(.active) {
+    color: #ffffff;
+  }
+
+  /* Stat numbers: large, light weight (200-300), tabular */
+  .stat-num {
+    font-size: 38px;
+    font-weight: 200;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    font-family: "Geist Mono", "JetBrains Mono", monospace;
+  }
+
+  /* Stat labels: small, uppercase above or below number */
+  .stat-cap {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  /* Hairline divider between list rows */
+  .hairline-b {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .hairline-t {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Thin tick-mark progress bar */
+  .tick-track {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .tick-mark {
+    flex: 1;
+    height: 8px;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    transition: background 0.2s;
+  }
+
+  .tick-mark.active {
+    background: #ffffff;
+  }
+
+  /* Clean pulse for critical alerts without blurry glows */
+  @keyframes border-pulse-critical {
     0%,
     100% {
-      box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+      border-color: rgba(244, 63, 94, 0.3);
     }
     50% {
-      box-shadow: 0 0 0 8px rgba(244, 63, 94, 0.25);
+      border-color: #f43f5e;
     }
   }
 
   .pulse-critical {
-    animation: pulse-red 1.5s ease-in-out infinite;
+    animation: border-pulse-critical 1.5s ease-in-out infinite;
   }
 
-  /* Recording indicator */
-  @keyframes recording-blink {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.3;
-    }
-  }
-
-  .recording-dot {
-    animation: recording-blink 1s ease-in-out infinite;
-  }
-
-  /* Skeleton shimmer */
-  @keyframes shimmer {
+  /* Skeleton shimmer: subtle dark sweep */
+  @keyframes shimmer-dark {
     0% {
       background-position: -200% 0;
     }
@@ -207,12 +307,12 @@
   .skeleton {
     background: linear-gradient(
       90deg,
-      var(--surface) 25%,
-      var(--surface-raised) 50%,
-      var(--surface) 75%
+      #0b0b0c 25%,
+      rgba(255, 255, 255, 0.05) 50%,
+      #0b0b0c 75%
     );
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: var(--radius-sm);
+    animation: shimmer-dark 1.5s infinite;
+    border-radius: 8px;
   }
 }

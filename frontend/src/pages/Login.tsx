@@ -1,12 +1,13 @@
 /**
  * pages/Login.tsx
- * High-aesthetic PIN login page for RingGuard Control Center.
- * Supports both on-screen numeric keypad and hardware keyboard input.
+ * Pro dark bento PIN login page.
+ * Solid near-black (#0b0b0c) card on #000 page, 20px radius, 1px border at rgba(255,255,255,0.08).
+ * No glows, no gradients.
  */
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, Lock, Delete, ArrowRight, AlertCircle, Sparkles } from 'lucide-react'
+import { Shield, Lock, Delete, ArrowRight, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { APP_NAME, APP_TAGLINE } from '@/lib/constants'
 
@@ -76,69 +77,41 @@ export function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 selection:bg-[var(--accent)] selection:text-white"
-      style={{
-        background: 'radial-gradient(ellipse at 50% 20%, #171d2b 0%, var(--bg) 70%)',
-      }}
-    >
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-black text-white">
+      <div className="w-full max-w-sm">
         {/* Card */}
         <div
-          className="rounded-2xl border p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden"
+          className="rounded-[20px] border p-8 relative overflow-hidden"
           style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.05)',
+            background: '#0b0b0c',
+            borderColor: 'rgba(255, 255, 255, 0.08)',
           }}
         >
-          {/* Subtle Top Glow Accent */}
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, transparent, var(--accent), transparent)',
-            }}
-          />
-
           {/* Brand & Header */}
-          <div className="flex flex-col items-center text-center mb-8">
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg ring-1 ring-white/10"
-              style={{
-                background: 'linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%)',
-                boxShadow: '0 8px 20px -4px rgba(59, 130, 246, 0.5)',
-              }}
-            >
-              <Shield className="w-7 h-7 text-white" />
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-12 h-12 rounded-[14px] flex items-center justify-center mb-3 bg-white/10 border border-white/15">
+              <Shield className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+            <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-white">
               {APP_NAME}
             </h1>
-            <p className="text-sm text-[var(--text-secondary)] mt-1">{APP_TAGLINE}</p>
+            <p className="text-xs text-[var(--text-secondary)] mt-1 font-normal">{APP_TAGLINE}</p>
 
             {USE_MOCKS && (
-              <div
-                className="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border"
-                style={{
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  borderColor: 'rgba(59, 130, 246, 0.3)',
-                  color: '#93c5fd',
-                }}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Mock Mode Active — Enter any PIN (e.g. 1234)</span>
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono text-[var(--text-secondary)] bg-white/5 border border-white/10">
+                <span>Mock Mode Active — PIN: any 4 digits</span>
               </div>
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* PIN Display Input */}
             <div>
               <label
                 htmlFor="pin-input"
-                className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 text-center"
+                className="block text-[11px] font-mono font-medium uppercase tracking-wider text-[var(--text-muted)] mb-2 text-center"
               >
-                Enter Security PIN
+                Security PIN
               </label>
 
               <div className="relative">
@@ -156,15 +129,15 @@ export function LoginPage() {
                     setError(null)
                   }}
                   onKeyDown={handleKeyDown}
-                  className="w-full text-center text-2xl tracking-[0.5em] font-mono py-3 px-4 rounded-xl border bg-black/30 text-[var(--text-primary)] focus:outline-none transition-all placeholder:tracking-normal placeholder:font-sans placeholder:text-sm"
+                  className="w-full text-center text-xl tracking-[0.5em] font-mono py-2.5 px-4 rounded-[12px] border bg-black text-white focus:outline-none focus:border-white/40 transition-colors placeholder:tracking-normal placeholder:font-sans placeholder:text-xs"
                   style={{
-                    borderColor: error ? 'var(--critical)' : 'var(--border)',
+                    borderColor: error ? '#f43f5e' : 'rgba(255, 255, 255, 0.1)',
                   }}
                   placeholder="••••"
                   autoFocus
                 />
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none">
-                  <Lock className="w-4 h-4" />
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none">
+                  <Lock className="w-3.5 h-3.5" />
                 </div>
               </div>
 
@@ -173,13 +146,12 @@ export function LoginPage() {
                 {[0, 1, 2, 3].map(idx => (
                   <div
                     key={idx}
-                    className="w-2.5 h-2.5 rounded-full transition-all duration-200"
+                    className="w-2 h-2 rounded-full transition-all duration-150"
                     style={{
                       background:
                         pin.length > idx
-                          ? 'var(--accent)'
-                          : 'var(--neutral-subtle)',
-                      transform: pin.length > idx ? 'scale(1.2)' : 'scale(1)',
+                          ? '#ffffff'
+                          : 'rgba(255, 255, 255, 0.15)',
                     }}
                   />
                 ))}
@@ -189,11 +161,11 @@ export function LoginPage() {
             {/* Error Message */}
             {error && (
               <div
-                className="flex items-center gap-2 p-3 rounded-lg text-xs font-medium border"
+                className="flex items-center gap-2 p-2.5 rounded-[10px] text-xs font-mono border"
                 style={{
-                  background: 'var(--critical-subtle)',
-                  borderColor: 'var(--critical)' + '40',
-                  color: 'var(--critical)',
+                  background: 'rgba(244, 63, 94, 0.1)',
+                  borderColor: 'rgba(244, 63, 94, 0.25)',
+                  color: '#f43f5e',
                 }}
                 role="alert"
               >
@@ -203,17 +175,16 @@ export function LoginPage() {
             )}
 
             {/* Numeric Keypad */}
-            <div className="grid grid-cols-3 gap-2.5 pt-1">
+            <div className="grid grid-cols-3 gap-2 pt-1">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => handleKeyPress(num)}
                   disabled={isLoading}
-                  className="h-12 rounded-xl text-lg font-semibold border transition-all active:scale-95 text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
+                  className="h-11 rounded-[12px] text-base font-mono font-medium border bg-black text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                   style={{
-                    background: 'var(--surface-subtle)',
-                    borderColor: 'var(--border)',
+                    borderColor: 'rgba(255, 255, 255, 0.08)',
                   }}
                 >
                   {num}
@@ -223,10 +194,9 @@ export function LoginPage() {
                 type="button"
                 onClick={handleClear}
                 disabled={isLoading || pin.length === 0}
-                className="h-12 rounded-xl text-xs font-medium border transition-all active:scale-95 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-11 rounded-[12px] text-xs font-mono font-medium border bg-black text-[var(--text-secondary)] hover:text-white hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{
-                  background: 'var(--surface-subtle)',
-                  borderColor: 'var(--border)',
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
                 }}
                 title="Clear input"
               >
@@ -236,10 +206,9 @@ export function LoginPage() {
                 type="button"
                 onClick={() => handleKeyPress('0')}
                 disabled={isLoading}
-                className="h-12 rounded-xl text-lg font-semibold border transition-all active:scale-95 text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] cursor-pointer"
+                className="h-11 rounded-[12px] text-base font-mono font-medium border bg-black text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                 style={{
-                  background: 'var(--surface-subtle)',
-                  borderColor: 'var(--border)',
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
                 }}
               >
                 0
@@ -248,15 +217,14 @@ export function LoginPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={isLoading || pin.length === 0}
-                className="h-12 rounded-xl flex items-center justify-center border transition-all active:scale-95 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-11 rounded-[12px] flex items-center justify-center border bg-black text-[var(--text-secondary)] hover:text-white hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{
-                  background: 'var(--surface-subtle)',
-                  borderColor: 'var(--border)',
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
                 }}
                 title="Backspace"
                 aria-label="Backspace"
               >
-                <Delete className="w-5 h-5" />
+                <Delete className="w-4 h-4" />
               </button>
             </div>
 
@@ -264,26 +232,22 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || pin.length < 4}
-              className="w-full flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold text-white transition-all shadow-md active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: 'linear-gradient(135deg, var(--accent) 0%, #2563eb 100%)',
-                boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)',
-              }}
+              className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-[12px] text-xs font-semibold bg-white text-[#0b0b0c] hover:bg-white/90 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span>Authenticating...</span>
               ) : (
                 <>
-                  <span>Sign In to Console</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Sign In</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </>
               )}
             </button>
           </form>
 
           {/* Footer notice */}
-          <div className="mt-6 text-center text-xs text-[var(--text-muted)]">
-            Authorized personnel only. Sessions expire after 12 hours.
+          <div className="mt-5 text-center text-[11px] font-mono text-[var(--text-muted)]">
+            Authorized personnel only. Sessions expire after 12h.
           </div>
         </div>
       </div>

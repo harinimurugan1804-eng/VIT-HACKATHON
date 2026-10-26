@@ -1,14 +1,11 @@
 /**
  * pages/Live.tsx
  * Real-time CCTV surveillance grid and live incident feed.
- * Features:
- * - 2x2 Camera stream grid with resilient error recovery and mock mode indicator.
- * - Live incident feed column (WebSocket powered, newest first) with IncidentCard components.
- * - Multi-tier alerts:
- *   - Critical: toast + Web Audio API beep + 10s red pulse on camera tile.
- *   - High: toast notification only.
- *   - Low: feed only.
- * - Fully responsive side-by-side layout at 1366x768 without horizontal scroll.
+ * Pro Dark Bento styling:
+ * - 12-column bento proportions with 14px gaps.
+ * - Solid near-black (#0b0b0c) cards, 20px radius, 1px border at rgba(255,255,255,0.08).
+ * - Monospace Geist Mono timestamps and metrics.
+ * - Meaningful status indicators only.
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -93,7 +90,7 @@ export function LivePage() {
       return [incident, ...prev]
     })
 
-    // Critical Alert: toast + short beep + 10s red pulse on camera tile
+    // Critical Alert: clean toast + beep + camera tile pulse
     if (incident.severity === 'critical') {
       playCriticalBeep()
 
@@ -102,18 +99,16 @@ export function LivePage() {
         id: toastId,
         incidentId: incident.id,
         severity: 'critical',
-        title: `Critical Alert: ${incident.type.toUpperCase()}`,
-        message: `${incident.camera_name} — immediate response required`,
+        title: `CRITICAL: ${incident.type.toUpperCase()}`,
+        message: `${incident.camera_name} — immediate attention required`,
         timestamp: formatTime(incident.started_at),
       }
       setToasts(prev => [newToast, ...prev.slice(0, 4)])
 
-      // Auto dismiss toast after 6s
       setTimeout(() => {
         setToasts(prev => prev.filter(t => t.id !== toastId))
-      }, 6000)
+      }, 7000)
 
-      // Red pulse on camera tile for 10 seconds
       if (incident.camera_id) {
         setPulsingCameraIds(prev => ({
           ...prev,
@@ -136,7 +131,7 @@ export function LivePage() {
         id: toastId,
         incidentId: incident.id,
         severity: 'high',
-        title: `High Alert: ${incident.type.toUpperCase()}`,
+        title: `HIGH: ${incident.type.toUpperCase()}`,
         message: `${incident.camera_name} — investigation recommended`,
         timestamp: formatTime(incident.started_at),
       }
@@ -146,7 +141,6 @@ export function LivePage() {
         setToasts(prev => prev.filter(t => t.id !== toastId))
       }, 5000)
     }
-    // Low Alert: feed only (no toast, no beep, no pulse)
   }, [])
 
   // Subscribe to WebSocket events
@@ -175,47 +169,37 @@ export function LivePage() {
   }, [handleIncomingIncident])
 
   return (
-    <div className="space-y-5 overflow-x-hidden">
+    <div className="space-y-4 overflow-x-hidden">
       {/* Toast notifications stack */}
       {toasts.length > 0 && (
         <aside
           aria-label="Security alerts"
-          className="fixed top-20 right-6 z-50 flex flex-col gap-2.5 max-w-sm pointer-events-none"
+          className="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"
         >
           {toasts.map(toast => (
             <div
               key={toast.id}
               onClick={() => navigate(`/incidents/${toast.incidentId}`)}
-              className="pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl border shadow-2xl backdrop-blur-md transition-all duration-200 cursor-pointer animate-in fade-in slide-in-from-top-2"
+              className="pointer-events-auto flex items-start gap-3 p-4 rounded-[20px] border shadow-xl cursor-pointer"
               style={{
-                background:
-                  toast.severity === 'critical'
-                    ? 'rgba(28, 12, 16, 0.96)'
-                    : 'rgba(28, 20, 10, 0.96)',
-                borderColor:
-                  toast.severity === 'critical'
-                    ? 'rgba(244, 63, 94, 0.5)'
-                    : 'rgba(245, 158, 11, 0.5)',
-                boxShadow:
-                  toast.severity === 'critical'
-                    ? '0 10px 25px -5px rgba(244, 63, 94, 0.35)'
-                    : '0 10px 25px -5px rgba(245, 158, 11, 0.25)',
+                background: '#0b0b0c',
+                borderColor: toast.severity === 'critical' ? 'rgba(244, 63, 94, 0.4)' : 'rgba(245, 158, 11, 0.4)',
               }}
               role="status"
             >
               <div className="mt-0.5 shrink-0">
                 {toast.severity === 'critical' ? (
-                  <AlertCircle className="w-5 h-5 text-rose-500 animate-pulse" />
+                  <AlertCircle className="w-4 h-4 text-[#f43f5e]" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  <AlertTriangle className="w-4 h-4 text-[#f59e0b]" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className="text-xs font-bold tracking-tight"
+                    className="text-xs font-mono font-semibold"
                     style={{
-                      color: toast.severity === 'critical' ? '#fda4af' : '#fcd34d',
+                      color: toast.severity === 'critical' ? '#f43f5e' : '#f59e0b',
                     }}
                   >
                     {toast.title}
@@ -234,7 +218,7 @@ export function LivePage() {
                   e.stopPropagation()
                   setToasts(prev => prev.filter(t => t.id !== toast.id))
                 }}
-                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] shrink-0 p-1 cursor-pointer"
+                className="text-[var(--text-muted)] hover:text-white shrink-0 p-1 cursor-pointer"
                 aria-label="Dismiss alert"
               >
                 <X className="w-3.5 h-3.5" />
@@ -249,81 +233,74 @@ export function LivePage() {
         description="Real-time CCTV grid, instant multi-tier incident detection, and automated signed stream recovery"
       />
 
-      {/* Main Side-by-Side Container (Fits side by side at 1366x768 without horizontal scroll) */}
-      <div className="flex flex-col lg:flex-row gap-5 items-start overflow-x-hidden">
+      {/* Main Container with 14px gap (Bento style) */}
+      <div className="flex flex-col lg:flex-row gap-[14px] items-start overflow-x-hidden">
         {/* ── Left Column: 2x2 Camera Grid ────────────────────── */}
         <div className="flex-1 min-w-0 w-full">
           {camerasLoading ? (
             <SkeletonCameraGrid count={4} />
           ) : camerasError ? (
             <div
-              className="p-6 rounded-xl border text-center text-sm font-medium"
+              className="p-6 rounded-[20px] border text-center text-sm font-mono text-[#f43f5e]"
               style={{
-                background: 'var(--critical-subtle)',
-                borderColor: 'var(--critical)' + '40',
-                color: 'var(--critical)',
+                background: '#0b0b0c',
+                borderColor: 'rgba(244, 63, 94, 0.3)',
               }}
             >
               Failed to load camera feeds. Please check network connection or verify session.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[14px]">
               {(cameras || []).map(camera => {
                 const isPulsing = Boolean(pulsingCameraIds[camera.id])
 
                 return (
                   <div
                     key={camera.id}
-                    className={`group rounded-xl border overflow-hidden flex flex-col transition-all duration-300 shadow-md ${
-                      isPulsing
-                        ? 'ring-2 ring-rose-500 animate-pulse shadow-[0_0_30px_rgba(244,63,94,0.6)] border-rose-500'
-                        : 'hover:border-[var(--accent)]'
+                    className={`rounded-[20px] border overflow-hidden flex flex-col transition-colors duration-200 ${
+                      isPulsing ? 'pulse-critical border-[#f43f5e]' : ''
                     }`}
                     style={{
-                      background: 'var(--surface)',
-                      borderColor: isPulsing ? '#f43f5e' : 'var(--border)',
+                      background: '#0b0b0c',
+                      borderColor: isPulsing ? '#f43f5e' : 'rgba(255, 255, 255, 0.08)',
                     }}
                   >
                     {/* Camera Header Bar */}
                     <div
-                      className="flex items-center justify-between px-3.5 py-2.5 border-b text-xs shrink-0"
+                      className="flex items-center justify-between px-4 py-3 border-b text-xs shrink-0"
                       style={{
-                        background: isPulsing
-                          ? 'rgba(244, 63, 94, 0.15)'
-                          : 'var(--surface-subtle)',
-                        borderColor: isPulsing ? '#f43f5e' : 'var(--border)',
+                        borderColor: 'rgba(255, 255, 255, 0.08)',
                       }}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <div
-                          className={`w-2 h-2 rounded-full shrink-0 ${
-                            isPulsing
-                              ? 'bg-rose-500 animate-ping'
-                              : camera.online
-                              ? 'bg-emerald-500 animate-pulse'
-                              : 'bg-zinc-500'
-                          }`}
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{
+                            background: camera.online ? '#10b981' : '#6b7280',
+                          }}
                         />
-                        <span className="font-semibold text-[var(--text-primary)] truncate">
+                        <span className="font-medium text-white truncate text-xs">
                           {camera.name}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
                         {camera.location && (
-                          <span className="hidden sm:inline-flex items-center gap-1 text-[var(--text-muted)] text-[11px]">
+                          <span className="hidden sm:inline-flex items-center gap-1 text-[var(--text-muted)] text-[11px] font-mono">
                             <MapPin className="w-3 h-3" />
                             {camera.location}
                           </span>
                         )}
                         <span
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono border"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-[10px] font-mono border"
                           style={{
                             background: camera.online
-                              ? 'var(--resolved-subtle)'
-                              : 'var(--neutral-subtle)',
-                            color: camera.online ? 'var(--resolved)' : 'var(--neutral)',
-                            borderColor: 'var(--border)',
+                              ? 'rgba(16, 185, 129, 0.1)'
+                              : 'rgba(107, 114, 128, 0.1)',
+                            color: camera.online ? '#10b981' : '#6b7280',
+                            borderColor: camera.online
+                              ? 'rgba(16, 185, 129, 0.25)'
+                              : 'rgba(107, 114, 128, 0.25)',
                           }}
                         >
                           <Activity className="w-3 h-3" />
@@ -343,15 +320,15 @@ export function LivePage() {
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center text-[var(--text-muted)] gap-2 p-6">
-                          <Video className="w-10 h-10 opacity-30" />
-                          <span className="text-xs font-medium">Camera signal offline</span>
+                          <Video className="w-8 h-8 opacity-30" />
+                          <span className="text-xs font-mono">Camera signal offline</span>
                         </div>
                       )}
 
                       {/* Overlaid Active Zones Badge */}
                       {camera.zones && camera.zones.length > 0 && (
-                        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded bg-black/70 backdrop-blur text-[10px] text-zinc-300 border border-white/10">
-                          <Eye className="w-3 h-3 text-[var(--accent)]" />
+                        <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-black/80 text-[10px] font-mono text-[var(--text-secondary)] border border-white/10">
+                          <Eye className="w-3 h-3 text-white" />
                           <span>
                             {camera.zones.length} {camera.zones.length === 1 ? 'Zone' : 'Zones'}
                           </span>
@@ -360,9 +337,9 @@ export function LivePage() {
 
                       {/* Red Pulse Warning Tag */}
                       {isPulsing && (
-                        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold shadow-md">
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-[#f43f5e] text-white text-[10px] font-mono font-semibold">
                           <ShieldAlert className="w-3 h-3" />
-                          <span>CRITICAL ALERT ACTIVE</span>
+                          <span>CRITICAL ALERT</span>
                         </div>
                       )}
                     </div>
@@ -376,34 +353,26 @@ export function LivePage() {
         {/* ── Right Column: Live Incident Feed (Newest first) ─── */}
         <aside
           aria-label="Live incident feed"
-          className="w-full lg:w-[360px] lg:shrink-0 flex flex-col rounded-xl border shadow-lg overflow-hidden"
+          className="w-full lg:w-[360px] lg:shrink-0 flex flex-col rounded-[20px] border overflow-hidden"
           style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
+            background: '#0b0b0c',
+            borderColor: 'rgba(255, 255, 255, 0.08)',
           }}
         >
           {/* Feed Header */}
           <div
-            className="flex items-center justify-between px-4 py-3 border-b shrink-0"
+            className="flex items-center justify-between px-4 py-3.5 border-b shrink-0"
             style={{
-              background: 'var(--surface-subtle)',
-              borderColor: 'var(--border)',
+              borderColor: 'rgba(255, 255, 255, 0.08)',
             }}
           >
             <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-rose-500 animate-pulse" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+              <Radio className="w-3.5 h-3.5 text-[#f43f5e]" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-white">
                 Live Incident Feed
               </h2>
             </div>
-            <span
-              className="text-[11px] font-mono px-2 py-0.5 rounded-full border"
-              style={{
-                background: 'var(--accent-subtle)',
-                color: 'var(--accent)',
-                borderColor: 'var(--border)',
-              }}
-            >
+            <span className="text-[11px] font-mono text-[var(--text-secondary)] px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
               {incidents.length} {incidents.length === 1 ? 'event' : 'events'}
             </span>
           </div>
@@ -412,11 +381,11 @@ export function LivePage() {
           <div className="p-3 space-y-2.5 overflow-y-auto max-h-[580px] lg:max-h-[calc(100vh-210px)] min-h-[300px]">
             {incidents.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center text-[var(--text-muted)] gap-2">
-                <Activity className="w-8 h-8 opacity-40" />
-                <span className="text-xs font-medium text-[var(--text-secondary)]">
+                <Activity className="w-7 h-7 opacity-30" />
+                <span className="text-xs font-mono text-[var(--text-secondary)]">
                   No active incidents
                 </span>
-                <p className="text-[11px]">Surveillance nodes operational. All sectors secure.</p>
+                <p className="text-[11px] text-[var(--text-muted)]">Surveillance nodes operational. All sectors secure.</p>
               </div>
             ) : (
               incidents.map(incident => (

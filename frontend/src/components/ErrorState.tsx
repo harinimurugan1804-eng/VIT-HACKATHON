@@ -1,6 +1,7 @@
 /**
  * components/ErrorState.tsx
- * Error state with a retry button.
+ * Pro dark bento error state with a clean retry button.
+ * Card radius 20px, solid near-black (#0b0b0c), 1px border at rgba(255,255,255,0.08).
  */
 
 import { AlertTriangle } from 'lucide-react'
@@ -15,24 +16,27 @@ export function ErrorState({
   onRetry,
 }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-      <div
-        className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
-        style={{ background: 'var(--critical-subtle)' }}
-      >
-        <AlertTriangle className="w-7 h-7 text-[var(--critical)]" aria-hidden="true" />
+    <div
+      className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-[20px] border"
+      style={{
+        background: '#0b0b0c',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+      }}
+    >
+      <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-[#f43f5e]/10 border border-[#f43f5e]/25">
+        <AlertTriangle className="w-5 h-5 text-[#f43f5e]" aria-hidden="true" />
       </div>
-      <h2 className="text-base font-semibold text-[var(--text-primary)] mb-1">
+      <h2 className="text-base font-semibold text-white mb-1.5 tracking-tight">
         Failed to load
       </h2>
-      <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-4">{message}</p>
+      <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-5 leading-relaxed font-normal">
+        {message}
+      </p>
       {onRetry && (
         <button
+          type="button"
           onClick={onRetry}
-          className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
-          style={{ background: 'var(--surface-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-hover)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface-raised)')}
+          className="h-8 px-4 rounded-full text-xs font-semibold bg-white text-[#0b0b0c] hover:bg-white/90 transition-colors cursor-pointer"
         >
           Retry
         </button>

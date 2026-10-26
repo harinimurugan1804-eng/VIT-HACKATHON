@@ -1,6 +1,7 @@
 /**
  * app/Layout.tsx
  * App shell: fixed left sidebar + top bar + scrollable content area.
+ * Displays real-time system health, current IST time, logged-in user and logout action.
  */
 
 import { useState, useEffect } from 'react'
@@ -22,10 +23,13 @@ import {
   Database,
   Phone,
   Brain,
+  LogOut,
+  User as UserIcon,
 } from 'lucide-react'
 import { APP_NAME } from '@/lib/constants'
 import { fetchHealth } from '@/lib/api'
 import { nowIST } from '@/lib/time'
+import { useAuth } from '@/lib/auth'
 
 const NAV = [
   { to: '/live',       icon: Video,        label: 'Live Feed'    },
@@ -39,6 +43,7 @@ const NAV = [
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const [time, setTime] = useState(nowIST())
+  const { user, logout } = useAuth()
 
   // Tick the clock every second
   useEffect(() => {
@@ -54,9 +59,9 @@ export function Layout() {
 
   const camerasOnline = health?.cameras.filter(c => c.online).length ?? 0
   const camerasTotal  = health?.cameras.length ?? 0
-  const llmOnline     = health?.llm ?? false
-  const dbOnline      = health?.db ?? false
-  const twilioOnline  = health?.twilio ?? false
+  const dbOnline      = health?.db === 'ok' || health?.db === true
+  const twilioOnline  = health?.twilio === 'ok' || health?.twilio === true
+  const llmOnline     = health?.llm === 'ok' || health?.llm === 'ollama_only' || health?.llm === true
 
   return (
     <div className="flex h-dvh overflow-hidden" style={{ background: 'var(--bg)' }}>
@@ -117,16 +122,22 @@ export function Layout() {
         </nav>
 
         {/* Collapse toggle */}
-        <div className="p-2 border-t" style={{ borderColor: 'var(--border)' }}>
+        <div
+          className="p-3 border-t"
+          style={{ borderColor: 'var(--border)' }}
+        >
           <button
             onClick={() => setCollapsed(c => !c)}
-            className="w-full flex items-center justify-center p-2 rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors"
+            className="flex items-center justify-center w-full py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (
               <ChevronRight className="w-4 h-4" />
             ) : (
-              <ChevronLeft className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <ChevronLeft className="w-4 h-4" />
+                <span>Collapse</span>
+              </div>
             )}
           </button>
         </div>
@@ -157,7 +168,13 @@ export function Layout() {
               icon={<Brain className="w-3 h-3" />}
               label="AI"
               online={llmOnline}
-              title={llmOnline ? 'AI inference online' : 'AI inference offline'}
+              title={
+                health?.llm === 'ollama_only'
+                  ? 'AI inference online (Ollama)'
+                  : llmOnline
+                  ? 'AI inference online (Groq)'
+                  : 'AI inference offline'
+              }
             />
             {/* Database */}
             <StatusPill
@@ -171,17 +188,68 @@ export function Layout() {
               icon={<Phone className="w-3 h-3" />}
               label="Calls"
               online={twilioOnline}
-              title={twilioOnline ? 'Twilio online' : 'Twilio offline'}
+              title={
+                health?.twilio === 'not_configured'
+                  ? 'Twilio not configured'
+                  : twilioOnline
+                  ? 'Twilio voice/SMS online'
+                  : 'Twilio offline'
+              }
             />
           </div>
 
-          {/* Clock */}
-          <time
-            className="text-sm tabular text-[var(--text-secondary)] shrink-0 font-mono"
-            aria-label={`Current time: ${time} IST`}
-          >
-            {time} <span className="text-[var(--text-muted)] text-xs">IST</span>
-          </time>
+          {/* Right section: Clock, User profile, Logout */}
+          <div className="flex items-center gap-4 shrink-0">
+            {/* Clock */}
+            <time
+              className="text-sm tabular text-[var(--text-secondary)] shrink-0 font-mono hidden md:inline"
+              aria-label={`Current time: ${time} IST`}
+            >
+              {time} <span className="text-[var(--text-muted)] text-xs">IST</span>
+            </time>
+
+            {/* Logged in User Profile & Role */}
+            <div className="flex items-center gap-2.5 pl-3 border-l border-[var(--border)] shrink-0">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white uppercase shrink-0 ring-1 ring-white/10"
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent) 0%, #2563eb 100%)',
+                }}
+                title={user?.name || 'User'}
+              >
+                {user?.name ? (
+                  user.name.slice(0, 2).toUpperCase()
+                ) : (
+                  <UserIcon className="w-3.5 h-3.5" />
+                )}
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-semibold text-[var(--text-primary)] leading-tight max-w-[120px] truncate">
+                  {user?.name || 'Admin'}
+                </span>
+                <span
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded tracking-wide leading-none inline-block self-start mt-0.5"
+                  style={{
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    color: '#93c5fd',
+                  }}
+                >
+                  {user?.role || 'Admin'}
+                </span>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                type="button"
+                onClick={logout}
+                className="ml-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--critical)] hover:bg-[var(--critical-subtle)] border border-[var(--border)] transition-colors cursor-pointer"
+                title="Log out of RingGuard"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Log out</span>
+              </button>
+            </div>
+          </div>
         </header>
 
         {/* Page content */}

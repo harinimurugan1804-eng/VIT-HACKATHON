@@ -1,15 +1,17 @@
 /**
  * lib/ws.ts
- * WebSocket client for /ws/events.
- * In mock mode, emits a fake new incident every 20 seconds.
+ * WebSocket client for /ws/events?token=<token>.
+ * Handles real-time incident updates, roll-call notices, and emergency alerts.
+ * In mock mode (VITE_USE_MOCKS=true), emits simulated events periodically.
  */
 
 import type { WsEvent, Incident } from './types'
+import { getAuthToken, clearAuthSession, resolveMediaUrl } from './api'
 
 export type WsHandler = (event: WsEvent) => void
 
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
-const API_URL   = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const API_URL   = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/+$/, '')
 
 /* ── Mock incident templates ───────────────────────────── */
 
@@ -39,19 +41,19 @@ function makeMockIncident(): Incident {
     zone: 'zone-' + type,
     started_at: new Date().toISOString(),
     confidence: Math.round((0.72 + Math.random() * 0.27) * 100) / 100,
-    snapshot_url: `/media/${id}.jpg`,
-    clip_url: `/media/${id}.mp4`,
+    snapshot_url: resolveMediaUrl(`/media/${id}.jpg`),
+    clip_url: resolveMediaUrl(`/media/${id}.mp4`),
     timeline: [
       {
         at: new Date().toISOString(),
-        action: 'call_placed' as const,
+        action: 'call_placed',
         to: ['Ravi Kumar', 'Anand Pillai', 'Suresh Nair'][Math.floor(Math.random() * 3)],
       },
     ],
   }
 }
 
-/* ── Real WS client ─────────────────────────────────────── */
+/* ── SafetyWsClient ─────────────────────────────────────── */
 
 export class SafetyWsClient {
   private ws: WebSocket | null = null
@@ -59,8 +61,6 @@ export class SafetyWsClient {
   private mockInterval: ReturnType<typeof setInterval> | null = null
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private stopped = false
-
-  constructor() {}
 
   subscribe(handler: WsHandler): () => void {
     this.handlers.push(handler)
@@ -74,30 +74,72 @@ export class SafetyWsClient {
   }
 
   connect() {
-    if (this.stopped) return
+    this.stopped = false
 
     if (USE_MOCKS) {
+      if (this.mockInterval) clearInterval(this.mockInterval)
       this.mockInterval = setInterval(() => {
         this.emit({ event: 'new_incident', data: makeMockIncident() })
       }, 20_000)
       return
     }
 
-    const wsUrl = API_URL.replace(/^http/, 'ws') + '/ws/events'
-    this.ws = new WebSocket(wsUrl)
+    const token = getAuthToken()
+    if (!token) {
+      // Cannot connect without token per CONTRACT.md P5
+      return
+    }
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+
+    const wsBase = API_URL.replace(/^http/, 'ws')
+    const wsUrl = `${wsBase}/ws/events?token=${encodeURIComponent(token)}`
+    
+    try {
+      this.ws = new WebSocket(wsUrl)
+    } catch {
+      this.scheduleReconnect()
+      return
+    }
 
     this.ws.onmessage = (e: MessageEvent<string>) => {
       try {
-        const parsed = JSON.parse(e.data) as WsEvent
-        this.emit(parsed)
+        const parsed = JSON.parse(e.data)
+        // Normalize media URLs if it's an incident object
+        if (parsed && typeof parsed === 'object') {
+          if ('snapshot_url' in parsed && typeof parsed.snapshot_url === 'string') {
+            parsed.snapshot_url = resolveMediaUrl(parsed.snapshot_url)
+          }
+          if ('clip_url' in parsed && typeof parsed.clip_url === 'string') {
+            parsed.clip_url = resolveMediaUrl(parsed.clip_url)
+          }
+          if (parsed.data && typeof parsed.data === 'object') {
+            if ('snapshot_url' in parsed.data && typeof parsed.data.snapshot_url === 'string') {
+              parsed.data.snapshot_url = resolveMediaUrl(parsed.data.snapshot_url)
+            }
+            if ('clip_url' in parsed.data && typeof parsed.data.clip_url === 'string') {
+              parsed.data.clip_url = resolveMediaUrl(parsed.data.clip_url)
+            }
+          }
+        }
+        this.emit(parsed as WsEvent)
       } catch {
         // ignore malformed messages
       }
     }
 
-    this.ws.onclose = () => {
+    this.ws.onclose = (event: CloseEvent) => {
+      // CONTRACT.md P5: code 4401 means expired or bad token
+      if (event.code === 4401) {
+        clearAuthSession()
+        return
+      }
+
       if (!this.stopped) {
-        this.reconnectTimer = setTimeout(() => this.connect(), 5000)
+        this.scheduleReconnect()
       }
     }
 
@@ -106,11 +148,31 @@ export class SafetyWsClient {
     }
   }
 
+  private scheduleReconnect() {
+    if (this.stopped) return
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
+    this.reconnectTimer = setTimeout(() => {
+      const token = getAuthToken()
+      if (token) {
+        this.connect()
+      }
+    }, 5000)
+  }
+
   disconnect() {
     this.stopped = true
-    if (this.mockInterval) clearInterval(this.mockInterval)
-    if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
-    this.ws?.close()
+    if (this.mockInterval) {
+      clearInterval(this.mockInterval)
+      this.mockInterval = null
+    }
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    if (this.ws) {
+      this.ws.close()
+      this.ws = null
+    }
   }
 }
 

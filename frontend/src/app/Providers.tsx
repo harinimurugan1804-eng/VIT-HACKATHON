@@ -1,10 +1,12 @@
 /**
  * app/Providers.tsx
- * Root providers: TanStack Query + React Router.
+ * Root providers: TanStack Query + React Router + AuthProvider.
  */
 
+import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from '@/lib/auth'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,7 +20,9 @@ const queryClient = new QueryClient({
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <BrowserRouter>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
